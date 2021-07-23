@@ -1,93 +1,51 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-
-export type SquareProps = {
-  value: string;
-  onClick(): void;
-};
-
-export function Square(props: SquareProps) {
-  return (
-    <button className="square" onClick={props.onClick}>
-      {props.value}
-    </button>
-  );
-}
-
-export type BoardProps = {
-  squares: string[];
-  onClick(i: number): void;
-};
-
-export function Board(props: BoardProps) {
-  function renderSquare(i: number) {
-    return <Square value={props.squares[i]} onClick={() => props.onClick(i)} />;
-  }
-
-  return (
-    <div>
-      <div className="board-row">
-        {renderSquare(0)}
-        {renderSquare(1)}
-        {renderSquare(2)}
-      </div>
-      <div className="board-row">
-        {renderSquare(3)}
-        {renderSquare(4)}
-        {renderSquare(5)}
-      </div>
-      <div className="board-row">
-        {renderSquare(6)}
-        {renderSquare(7)}
-        {renderSquare(8)}
-      </div>
-    </div>
-  );
-}
+import { Board } from "./Board";
 
 export function Game() {
-  const [state, setState] = useState({
-    history: [
+  const [stepNumber, setStepNumber] = useState(0);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [history, setHistory] = useState({
+    plays: [
       {
         squares: Array(9).fill(null),
       },
     ],
-    stepNumber: 0,
-    xIsNext: true,
   });
 
   function handleClick(i: number) {
-    const history = state.history.slice(0, state.stepNumber + 1);
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
+    const plays = history.plays.slice(0, stepNumber + 1);
+    const currentPlay = plays[plays.length - 1];
+    const squares = currentPlay.squares.slice();
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = state.xIsNext ? "X" : "O";
-    setState({
-      history: history.concat([
+    squares[i] = xIsNext ? "X" : "O";
+
+    setStepNumber(plays.length);
+    setXIsNext(!xIsNext);
+    setHistory({
+      plays: plays.concat([
         {
           squares: squares,
         },
       ]),
-      stepNumber: history.length,
-      xIsNext: !state.xIsNext,
     });
   }
 
   function jumpTo(step: number) {
-    setState({
-      history: state.history.slice(0, step + 1),
-      stepNumber: step,
-      xIsNext: step % 2 === 0,
+    setStepNumber(step);
+    setXIsNext(step % 2 === 0);
+    setHistory({
+      plays: history.plays.slice(0, step + 1),
     });
   }
 
-  const history = state.history;
-  const current = history[state.stepNumber];
+  const plays = history.plays;
+  const current = plays[stepNumber];
   const winner = calculateWinner(current.squares);
 
-  const moves = history.map((step, move) => {
+  const moves = plays.map((step, move) => {
     const desc = move ? "Go to move #" + move : "Go to game start";
     return (
       <li key={move}>
@@ -100,7 +58,7 @@ export function Game() {
   if (winner) {
     status = "Winner: " + winner;
   } else {
-    status = "Next player: " + (state.xIsNext ? "X" : "O");
+    status = "Next player: " + (xIsNext ? "X" : "O");
   }
 
   return (
