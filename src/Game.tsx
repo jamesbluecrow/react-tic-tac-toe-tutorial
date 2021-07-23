@@ -1,17 +1,20 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import React from "react";
 import { Board } from "./Board";
+import { useAppDispatch, useAppSelector } from "./store/hooks";
+import {
+  incrementSteps,
+  resetStepsTo,
+  selectStepValue,
+} from "./store/slices/step_number_slice";
+import { selectXIsNext, setTurnIsNext } from "./store/slices/x_isnext_slice";
+import { addPlay, resetHistoryTo } from "./store/slices/history_slice";
+import { RootState } from "./store/store";
 
 export function Game() {
-  const [stepNumber, setStepNumber] = useState(0);
-  const [xIsNext, setXIsNext] = useState(true);
-  const [history, setHistory] = useState({
-    plays: [
-      {
-        squares: Array(9).fill(null),
-      },
-    ],
-  });
+  const dispatch = useAppDispatch();
+  const stepNumber = useAppSelector(selectStepValue);
+  const xIsNext = useAppSelector(selectXIsNext);
+  const history = useAppSelector((state: RootState) => state.history);
 
   function handleClick(i: number) {
     const plays = history.plays.slice(0, stepNumber + 1);
@@ -20,25 +23,18 @@ export function Game() {
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
+
     squares[i] = xIsNext ? "X" : "O";
 
-    setStepNumber(plays.length);
-    setXIsNext(!xIsNext);
-    setHistory({
-      plays: plays.concat([
-        {
-          squares: squares,
-        },
-      ]),
-    });
+    dispatch(incrementSteps());
+    dispatch(setTurnIsNext(!xIsNext));
+    dispatch(addPlay(squares));
   }
 
   function jumpTo(step: number) {
-    setStepNumber(step);
-    setXIsNext(step % 2 === 0);
-    setHistory({
-      plays: history.plays.slice(0, step + 1),
-    });
+    dispatch(resetStepsTo(step));
+    dispatch(setTurnIsNext(step % 2 === 0));
+    dispatch(resetHistoryTo(step));
   }
 
   const plays = history.plays;
@@ -73,10 +69,6 @@ export function Game() {
     </div>
   );
 }
-
-// ========================================
-
-ReactDOM.render(<Game />, document.getElementById("root"));
 
 function calculateWinner(squares: string[]) {
   const lines = [
