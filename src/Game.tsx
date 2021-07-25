@@ -8,7 +8,7 @@ import {
 } from "./store/slices/step_number_slice";
 import { selectXIsNext, setTurnIsNext } from "./store/slices/x_isnext_slice";
 import { addPlay, resetHistoryTo } from "./store/slices/history_slice";
-import { RootState } from "./store/store";
+import { RootState } from "./store/config_store";
 
 export function Game() {
   const dispatch = useAppDispatch();
